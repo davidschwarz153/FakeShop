@@ -1,1 +1,0 @@
-![](https://github.com/davidschwarz153/fakeshop/blob/main/assets/preview.gif)

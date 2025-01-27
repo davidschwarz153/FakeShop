@@ -17,6 +17,7 @@ const cardContainer = document.querySelector("#card-container");
 const searchInput = document.querySelector<HTMLInputElement>("#search-input");
 const searchBtn = document.querySelector<HTMLInputElement>("#search-btn");
 
+let cart: Product[] = []
 
 async function fakeshop() {
   try {
@@ -24,7 +25,6 @@ async function fakeshop() {
     const prods: Product[] = await response.json();
     genProductCard(prods)
     if(searchInput && searchBtn){
-
         searchBtn.addEventListener("click", () => {
             const input = searchInput.value.toLowerCase();
             const filteredProducts = prods.filter(prods =>
@@ -32,8 +32,8 @@ async function fakeshop() {
                 prods.description.toLowerCase().includes(input)
             );
             genProductCard(filteredProducts)})
-            
     }
+    createCategoryDropdown(prods)
   } catch (err) {
     console.warn("Error" + err);
   }
@@ -55,21 +55,68 @@ function genProductCard(prods:Product[]){
             alt="${el.description}" />
             </figure>
             <div class="card-body">
-            <h2 class="card-title text-clip">
+            <h2 class=" text-clip">
             ${el.title}
-            <div class="badge badge-secondary">NEW</div>
+            <div class="badge badge-accent ">${el.rating.rate}</div>
             </h2>
-            <p class="truncate" >${el.description}</p>
+            <p class="truncate text-gray-500" >${el.description}</p>
             <div class="card-actions justify-end">
-            <div class="badge badge-outline">Fashion</div>
-            <div class="badge badge-outline">Products</div>
+            <div class="text-xl" >${el.price.toFixed(2)}$</div>
+            <button class="btn btn-sm btn-primary add-to-cart-btn" data-id="${el.id}">Add to Cart</button>
             </div>
             </div>
             </div>
             </article>`;
             
         });
+        document.querySelectorAll(".add-to-cart-btn").forEach((button) => {
+          button.addEventListener("click", (event) => {
+            const target = event.target as HTMLButtonElement;
+            const productId = parseInt(target.dataset.id || "0");
+            const product = prods.find((prod) => prod.id === productId);
+            if (product) {
+              addToCart(product);
+            }
+          });
+        });
     }
+}
+function createCategoryDropdown(prods: Product[]) {
+  const navbarCenter = document.querySelector(".navbar-center");
+  if (navbarCenter) {
+    const categories = Array.from(new Set(prods.map((prod) => prod.category)));
+
+    const dropdown = document.createElement("select");
+    dropdown.className = "select select-bordered";
+    dropdown.innerHTML = `<option value="">Sort by Category</option>`;
+    categories.forEach((cat) => {
+      dropdown.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+
+    dropdown.addEventListener("change", () => {
+      const selectedCategory = dropdown.value;
+      const filteredProducts =
+        selectedCategory === ""
+          ? prods
+          : prods.filter((prod) => prod.category === selectedCategory);
+      genProductCard(filteredProducts);
+    });
+
+    navbarCenter.appendChild(dropdown);
+  }
+}
+
+function addToCart(product: Product) {
+  cart.push(product);
+  updateCartBadge();
+  alert(`${product.title} added to the cart!`);
+}
+
+function updateCartBadge() {
+  const cartBadge = document.querySelector(".indicator .badge");
+  if (cartBadge) {
+    cartBadge.textContent = cart.length.toString();
+  }
 }
 
 fakeshop()
